@@ -539,3 +539,13 @@ create table if not exists audit_logs (
 create index if not exists idx_audit_logs_created on audit_logs(created_at desc);
 create index if not exists idx_audit_logs_action on audit_logs(action);
 create index if not exists idx_audit_logs_target_user on audit_logs(target_user_id);
+
+-- ---------- O'yinlar tartibi (bir martalik) ----------
+-- Bosh sahifada: 1 Free Fire, 2 PUBG Mobile, 3 Mobile Legends, 4 Mobile Legends (RU), keyin qolganlari.
+-- Faqat admin hali hech qaysi o'yin tartibini o'zgartirmagan bo'lsa (hammasi 0) qo'llanadi —
+-- keyinchalik admin panelda surib o'zgartirilgan tartib har qayta ishga tushishda buzilmaydi.
+update games g set sort_order = o.pos
+from (values ('freefire', 1), ('pubgm', 2), ('mlbb', 3), ('mlbb_ru', 4), ('genshin', 5), ('hok', 6),
+             ('mcgg', 7), ('supersus', 8), ('tgstars', 9), ('tgpremium', 10), ('vpn', 11)) as o(id, pos)
+where g.id = o.id
+  and not exists (select 1 from games where sort_order <> 0);
