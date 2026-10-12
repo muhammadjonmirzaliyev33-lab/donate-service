@@ -1,3 +1,4 @@
+import { asset } from './assets'
 import './style.css'
 import { currentHash, parseRoute } from './router'
 import { renderBottomNav, attachBottomNav, updateBottomNav, refreshBottomNavLabels, appendAdminTab } from './components/bottomNav'
@@ -48,7 +49,7 @@ window.addEventListener('phone-required', () => {
   box.id = 'phone-required'
   box.className = 'phone-required'
   box.innerHTML = `
-    <img src="/images/logo.png" alt="UZDI" />
+    <img src="${asset('/images/logo.png')}" alt="UZDI" />
     <h2>Telefon raqamingizni ulashing</h2>
     <p>Botga qaytib <b>/start</b> bosing va "Telefon raqamini ulashish" tugmasini bosing. Keyin ilovani qayta oching.</p>
     <button class="btn btn-accent" id="phone-required-close">Botga qaytish</button>`

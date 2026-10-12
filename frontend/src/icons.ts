@@ -1,3 +1,4 @@
+import { asset } from './assets'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import * as icons from 'lucide-react'
@@ -105,7 +106,7 @@ export function gameArtHtml(game: { id: string; icon?: string | null }, classNam
 		return `<img src="${game.icon}" alt="" class="${className}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />`
 	}
 	if (BUILTIN_COVERS.has(game.id)) {
-		return `<img src="/games/${game.id}.webp" alt="" class="${className}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />`
+		return `<img src="${asset(`/games/${game.id}.webp`)}" alt="" class="${className}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />`
 	}
 	return gameIconHtml(game.id, className)
 }

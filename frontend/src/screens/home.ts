@@ -1,3 +1,4 @@
+import { asset } from '../assets'
 import { GAMES, somHtml, getState, setBalance, setIdentity, t } from '../store'
 import { openPromoCodeSheet } from '../components/promoCode'
 import { mountBanners } from '../components/banners'
@@ -27,7 +28,7 @@ export function renderHome(root: HTMLElement) {
         <span>${t('greeting')} 👋</span>
         <b id="home-name">${state.username}</b>
       </div>
-      <img class="brand-logo" src="/images/logo.png" alt="UZDI" />
+      <img class="brand-logo" src="${asset('/images/logo.png')}" alt="UZDI" />
     </div>
 
     <div class="balance-card">
