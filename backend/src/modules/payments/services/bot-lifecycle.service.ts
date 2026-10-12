@@ -24,6 +24,7 @@ export class BotLifecycleService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   async onModuleInit() {
+    await this.configureMenuButton();
     const mode = this.config.get('TELEGRAM_BOT_MODE', { infer: true });
 
     if (mode === 'webhook') {
@@ -46,6 +47,18 @@ export class BotLifecycleService implements OnModuleInit, OnModuleDestroy {
     await this.botService.deleteWebhook();
     this.logger.log('Bot polling rejimida ishga tushdi');
     void this.pollLoop();
+  }
+
+  /**
+   * Botning menyu tugmasini ("Do'kon") Mini App manziliga avtomatik ulaydi — BotFather'da qo'lda
+   * sozlash shart emas. Manzil: FRONTEND_ORIGIN'dagi birinchi domen (Render'da avtomatik —
+   * shu serverning o'z manzili). Xato bo'lsa faqat logga yoziladi, ilova to'xtamaydi.
+   */
+  private async configureMenuButton() {
+    const appUrl = this.config.get('FRONTEND_ORIGIN', { infer: true })?.split(',')[0]?.trim();
+    if (!appUrl || !appUrl.startsWith('https://')) return;
+    const result = await this.botService.setMenuWebApp("Do'kon", appUrl);
+    if (result !== null) this.logger.log(`Menyu tugmasi ulandi: ${appUrl}`);
   }
 
   onModuleDestroy() {

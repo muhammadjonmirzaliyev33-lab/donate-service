@@ -157,6 +157,11 @@ export class BotService {
     return json.result ?? [];
   }
 
+  /** Botning pastki chapdagi menyu tugmasi (hamma foydalanuvchilar uchun) — Mini App'ni ochadi. */
+  setMenuWebApp(text: string, url: string) {
+    return this.call('setChatMenuButton', { menu_button: { type: 'web_app', text, web_app: { url } } });
+  }
+
   deleteWebhook() {
     return this.call('deleteWebhook', {});
   }
