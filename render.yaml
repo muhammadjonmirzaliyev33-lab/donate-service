@@ -20,10 +20,10 @@ services:
         sync: false
       - key: TELEGRAM_BOT_MODE
         value: webhook
-      # Bot tugmalari birinchi manzilni ochadi (Vercel'dagi Mini App); ikkalasi ham CORS uchun ruxsatli.
+      # Bot tugmalari birinchi manzilni ochadi (Vercel'dagi Mini App); hammasi CORS uchun ruxsatli.
       # PUBLIC_URL (webhook) RENDER_EXTERNAL_URL'dan avtomatik olinadi.
       - key: FRONTEND_ORIGIN
-        value: https://uzdi-miniapp.vercel.app,https://komak-bot.onrender.com
+        value: https://uzdi-miniapp-7pk1q3e02-muhammadjon-uz.vercel.app,https://uzdi-miniapp.vercel.app,https://komak-bot.onrender.com
 
 databases:
   - name: komak-db
