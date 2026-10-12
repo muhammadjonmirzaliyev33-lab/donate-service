@@ -1,0 +1,29 @@
+# Bir bosishda deploy: bot + API + Mini App bitta tekin servisda, baza ham avtomatik yaratiladi.
+services:
+  - type: web
+    name: komak-bot
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: komak-db
+          property: connectionString
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ADMIN_TELEGRAM_IDS
+        sync: false
+      - key: ADMIN_ALERT_CHAT_ID
+        sync: false
+      - key: TELEGRAM_BOT_MODE
+        value: webhook
+      # PUBLIC_URL va FRONTEND_ORIGIN shart emas — RENDER_EXTERNAL_URL'dan avtomatik olinadi.
+
+databases:
+  - name: komak-db
+    plan: free
+    databaseName: zaryad
+    user: zaryad
