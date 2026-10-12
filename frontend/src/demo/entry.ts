@@ -17,6 +17,11 @@ const covers = import.meta.glob('../../public/games/*.webp', { eager: true, quer
 >
 const assets: Record<string, string> = { '/images/logo.png': logo, '/images/loader_logo.png': logo }
 for (const [file, data] of Object.entries(covers)) assets[`/games/${file.split('/').pop()}`] = data
+const bannerImgs = import.meta.glob('../../public/banners/*.webp', { eager: true, query: '?inline', import: 'default' }) as Record<
+  string,
+  string
+>
+for (const [file, data] of Object.entries(bannerImgs)) assets[`/banners/${file.split('/').pop()}`] = data
 ;(window as unknown as { __DEMO_ASSETS: Record<string, string> }).__DEMO_ASSETS = assets
 const splashImg = document.querySelector<HTMLImageElement>('#splash img')
 if (splashImg) splashImg.src = logo

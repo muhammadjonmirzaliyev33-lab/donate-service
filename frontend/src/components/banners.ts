@@ -1,10 +1,23 @@
 import { getBanners, type BannerDto } from '../api'
+import { asset } from '../assets'
 
-/** Bosh sahifa karuseli — bannerlar bo'lmasa (yoki backend javob bermasa) hech narsa ko'rsatilmaydi. */
+/**
+ * Standart reklama bannerlari (frontend/public/banners) — admin paneldan hali banner qo'shilmagan
+ * bo'lsa yoki backend javob bermasa shular ko'rsatiladi. Admin o'z bannerini qo'shsa, o'shalar chiqadi.
+ */
+const DEFAULT_BANNERS: Pick<BannerDto, 'imageUrl' | 'link'>[] = [
+  { imageUrl: '/banners/uzdi.webp', link: '#/games' },
+  { imageUrl: '/banners/mlbb.webp', link: '#/game/mlbb' },
+  { imageUrl: '/banners/pubg-freefire.webp', link: '#/game/pubgm' },
+  { imageUrl: '/banners/telegram.webp', link: '#/game/tgstars' },
+]
+
+/** Bosh sahifa karuseli. */
 export function mountBanners(holder: HTMLElement) {
   getBanners()
-    .then((banners: BannerDto[]) => {
-      if (banners.length === 0) return
+    .catch(() => [] as BannerDto[])
+    .then((fromAdmin: Pick<BannerDto, 'imageUrl' | 'link'>[]) => {
+      const banners = (fromAdmin.length ? fromAdmin : DEFAULT_BANNERS).map((b) => ({ ...b, imageUrl: asset(b.imageUrl) }))
       holder.innerHTML = `
         <div class="banner-track">
           ${banners
@@ -42,8 +55,5 @@ export function mountBanners(holder: HTMLElement) {
           track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' })
         }, 4500)
       }
-    })
-    .catch(() => {
-      /* backend ishlamasa banner ko'rsatilmaydi */
     })
 }
