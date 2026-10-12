@@ -59,7 +59,16 @@ async function bootstrap() {
   // API route'lari bilan to'qnashuv yo'q: static faqat mavjud fayllarni (index.html, assets) beradi.
   const publicDir = join(process.cwd(), 'public');
   if (existsSync(publicDir)) {
-    app.useStaticAssets(publicDir, { index: 'index.html', maxAge: '1h' });
+    app.useStaticAssets(publicDir, {
+      index: 'index.html',
+      setHeaders: (res, filePath) => {
+        // /assets/* — Vite nomiga hash qo'shadi (index-AbC123.js), shuning uchun abadiy keshlansa bo'ladi.
+        // index.html va rasmlar (games/*.webp, banners/*.webp) nomi o'zgarmaydi — har safar tekshirilsin,
+        // aks holda Telegram yangi deploydan keyin ham eski versiyani ko'rsatib turadi.
+        if (/[\\/]assets[\\/]/.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        else res.setHeader('Cache-Control', 'no-cache');
+      },
+    });
   }
 
   app.enableCors({
