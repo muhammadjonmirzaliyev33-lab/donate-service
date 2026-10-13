@@ -554,7 +554,7 @@ where g.id = o.id
 -- Foydalanuvchi to'lov ekranida ko'radigan asosiy karta. Idempotent: shu raqamli karta
 -- allaqachon bo'lsa qayta qo'shilmaydi. Bank/egasining ismini admin panelda tahrirlash mumkin.
 insert into payment_cards (bank_name, card_number, holder_name, is_active, sort_order)
-select 'Humo', '9860 6067 5148 6139', 'UZDI ORG', true, 0
+select 'Humo', '9860 3501 4814 2986', 'UZDI ORG', true, 0
 where not exists (
-  select 1 from payment_cards where replace(card_number, ' ', '') = '9860606751486139'
+  select 1 from payment_cards where replace(card_number, ' ', '') = '9860350148142986'
 );

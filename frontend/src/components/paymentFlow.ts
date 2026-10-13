@@ -272,30 +272,31 @@ function openWaitingScreen(payment: PaymentDto, purpose: Purpose) {
       }
 
       ${showReceiptOption
-        ? `
-          <div class="hint-box error" style="margin:10px 16px 0">${t('moneyNotFoundHint')}</div>
-          <div class="receipt-box">
-            <div class="receipt-head">
-              ${iconHtml('receipt', '', 16)}
-              <span>${t('receiptFieldLabel')}</span>
-              ${current.hasReceipt ? `<span class="receipt-sent">${iconHtml('check', '', 13)} ${t('receiptSentLabel')}</span>` : ''}
-            </div>
-            <label class="receipt-drop ${receiptFile ? 'filled' : ''}" for="receipt-file">
-              <span class="receipt-drop-icon">${iconHtml(receiptFile ? 'check' : 'plus', '', 18)}</span>
-              <span class="receipt-drop-text">
-                <b>${receiptFile ? escapeHtml(receiptFile.name) : t('receiptPickLabel')}</b>
-                <span>${receiptFile ? formatFileSize(receiptFile.size) : t('receiptPickHint')}</span>
-              </span>
-              <input class="receipt-input" id="receipt-file" type="file" accept="image/*" />
-            </label>
-          </div>
-          <div class="sheet-actions row">
-            <button class="btn btn-soft" id="check-again" ${checkingNow ? 'disabled' : ''}>${iconHtml('search')} ${t('checkAgainBtn')}</button>
-            <button class="btn ${receiptFile ? 'btn-accent' : 'btn-soft'}" id="send-receipt" ${receiptBusy || !receiptFile ? 'disabled' : ''}>${receiptBusy ? '…' : `${iconHtml('send')} ${current.hasReceipt ? t('resendReceiptBtn') : t('sendReceiptBtn')}`}</button>
-          </div>
-        `
+        ? `<div class="hint-box error" style="margin:10px 16px 0">${t('moneyNotFoundHint')}</div>`
         : `<div class="status-line"><span class="status-dot"></span> ${t('autoCheckingStatus')}</div>`
       }
+
+      <div class="receipt-section">
+        <div class="receipt-box">
+          <div class="receipt-head">
+            ${iconHtml('receipt', '', 16)}
+            <span>${t('receiptFieldLabel')}</span>
+            ${current.hasReceipt ? `<span class="receipt-sent">${iconHtml('check', '', 13)} ${t('receiptSentLabel')}</span>` : ''}
+          </div>
+          <label class="receipt-drop ${receiptFile ? 'filled' : ''}" for="receipt-file">
+            <span class="receipt-drop-icon">${iconHtml(receiptFile ? 'check' : 'plus', '', 18)}</span>
+            <span class="receipt-drop-text">
+              <b>${receiptFile ? escapeHtml(receiptFile.name) : t('receiptPickLabel')}</b>
+              <span>${receiptFile ? formatFileSize(receiptFile.size) : t('receiptPickHint')}</span>
+            </span>
+            <input class="receipt-input" id="receipt-file" type="file" accept="image/*" />
+          </label>
+        </div>
+        <div class="sheet-actions row">
+          <button class="btn btn-soft" id="check-again" ${checkingNow ? 'disabled' : ''}>${iconHtml('search')} ${t('checkAgainBtn')}</button>
+          <button class="btn ${receiptFile ? 'btn-accent' : 'btn-soft'}" id="send-receipt" ${receiptBusy || !receiptFile ? 'disabled' : ''}>${receiptBusy ? '…' : `${iconHtml('send')} ${current.hasReceipt ? t('resendReceiptBtn') : t('sendReceiptBtn')}`}</button>
+        </div>
+      </div>
       ${avgMinutes ? `<div class="eta-line">${iconHtml('clock', '', 14)} ${t('avgProcessingTimeLabel').replace('{minutes}', String(avgMinutes))}</div>` : ''}
 
       <div class="sheet-actions">
