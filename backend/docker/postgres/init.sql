@@ -477,7 +477,7 @@ create table if not exists admin_accounts (
 );
 
 insert into admin_accounts (username, password_hash)
-values ('komak@pay20!!!', '$2a$12$EVoUogdDVK7nweULrstf6u64jqLTDSfezwI5mCymhBmRIlV/Rl0v6')
+values ('komak@pay20!!!', '$2b$12$KSOKcypcMJaQO3Kn1NddreSsIsrGhxn.ZjhlKFYcb49CC8BEVR5pK')
 on conflict (username) do update set password_hash = excluded.password_hash, updated_at = now();
 
 -- Web-login sessiya tokenlarini imzolash uchun kalit — env'da qo'lda sozlanmaydi,
