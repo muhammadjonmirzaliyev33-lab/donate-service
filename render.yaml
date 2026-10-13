@@ -14,8 +14,11 @@ services:
           property: connectionString
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      # Adminlar: raqamli Telegram id yoki "@username" (masalan "@UZDI_ORG"), vergul bilan.
       - key: ADMIN_TELEGRAM_IDS
         sync: false
+      # Chek/buyurtma signallari tushadigan chat: raqamli chat id, yoki ommaviy kanal/guruh
+      # "@username"i (bot o'sha kanalda admin bo'lishi shart).
       - key: ADMIN_ALERT_CHAT_ID
         sync: false
       - key: TELEGRAM_BOT_MODE

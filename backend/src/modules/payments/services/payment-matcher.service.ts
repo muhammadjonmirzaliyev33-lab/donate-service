@@ -8,6 +8,7 @@ import { BotService } from '../../bot/services/bot.service';
 import { PaymentCardsService } from '../../payment-cards/services/payment-cards.service';
 import type { TelegramUser } from '../../../common/interfaces/telegram-user.interface';
 import type { PaymentRow } from '../dto/payment.dto';
+import type { ChatId } from '../../bot/services/bot.service';
 
 /** SMS/notification'da match_amount topilmagan taqdirda — summa+vaqt oynasi bo'yicha qidiriladigan davr. */
 const MATCH_WINDOW_MINUTES = 120;
@@ -179,7 +180,7 @@ export class PaymentMatcherService {
 
   private async approve(
     payment: PaymentRow,
-    chatId: bigint,
+    chatId: ChatId,
     source: string,
     smsText: string,
     parsed: { parsedAmount?: number | null; parsedOrderNo?: number | null },

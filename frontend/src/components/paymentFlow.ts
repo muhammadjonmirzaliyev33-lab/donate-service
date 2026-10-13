@@ -15,6 +15,7 @@ import {
 } from '../api'
 import { haptic } from '../telegram'
 import { iconHtml } from '../icons'
+import { escapeHtml } from '../escape'
 
 const AMOUNT_PRESETS = [5000, 25000, 50000, 100000, 200000, 500000]
 const POLL_INTERVAL_MS = 4000
@@ -213,6 +214,11 @@ export function formatCardDisplay(raw: string): string {
   return digits.match(/.{1,4}/g)?.join(' ') ?? digits
 }
 
+/** Tanlangan chek hajmi — "248 KB" ko'rinishida. */
+function formatFileSize(bytes: number): string {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 /** Shuncha vaqt kutib ham holat o'zgarmasa — "Pul topilmadi" holati va chek yuklash imkoni ko'rsatiladi. */
 const SHOW_RECEIPT_OPTION_AFTER_MS = 60_000
 
@@ -223,6 +229,9 @@ function openWaitingScreen(payment: PaymentDto, purpose: Purpose) {
   let receiptBusy = false
   let showReceiptOption = false
   let checkingNow = false
+  /** Tanlangan chek. Ekran har polling'da qayta chiziladi — fayl <input>da emas, shu
+   *  yerda saqlanadi, aks holda 4 soniyadan keyin tanlov o'zidan o'zi yo'qoladi. */
+  let receiptFile: File | null = null
   const startedAt = Date.now()
 
   function html(): string {
@@ -265,18 +274,29 @@ function openWaitingScreen(payment: PaymentDto, purpose: Purpose) {
       ${showReceiptOption
         ? `
           <div class="hint-box error" style="margin:10px 16px 0">${t('moneyNotFoundHint')}</div>
-          <div class="field-group" style="margin-top:14px">
-            <div class="field-label"><span>${current.hasReceipt ? t('receiptSentLabel') : t('receiptFieldLabel')}</span></div>
-            <input class="input" id="receipt-file" type="file" accept="image/*" style="padding:10px" />
+          <div class="receipt-box">
+            <div class="receipt-head">
+              ${iconHtml('receipt', '', 16)}
+              <span>${t('receiptFieldLabel')}</span>
+              ${current.hasReceipt ? `<span class="receipt-sent">${iconHtml('check', '', 13)} ${t('receiptSentLabel')}</span>` : ''}
+            </div>
+            <label class="receipt-drop ${receiptFile ? 'filled' : ''}" for="receipt-file">
+              <span class="receipt-drop-icon">${iconHtml(receiptFile ? 'check' : 'plus', '', 18)}</span>
+              <span class="receipt-drop-text">
+                <b>${receiptFile ? escapeHtml(receiptFile.name) : t('receiptPickLabel')}</b>
+                <span>${receiptFile ? formatFileSize(receiptFile.size) : t('receiptPickHint')}</span>
+              </span>
+              <input class="receipt-input" id="receipt-file" type="file" accept="image/*" />
+            </label>
           </div>
-          <div class="sheet-actions" style="padding-top:0;flex-direction:row">
-            <button class="btn btn-soft" style="flex:1" id="check-again" ${checkingNow ? 'disabled' : ''}>${iconHtml('search')} ${t('checkAgainBtn')}</button>
-            <button class="btn btn-soft" style="flex:1" id="send-receipt" ${receiptBusy ? 'disabled' : ''}>${receiptBusy ? '…' : (current.hasReceipt ? t('resendReceiptBtn') : t('sendReceiptBtn'))}</button>
+          <div class="sheet-actions row">
+            <button class="btn btn-soft" id="check-again" ${checkingNow ? 'disabled' : ''}>${iconHtml('search')} ${t('checkAgainBtn')}</button>
+            <button class="btn ${receiptFile ? 'btn-accent' : 'btn-soft'}" id="send-receipt" ${receiptBusy || !receiptFile ? 'disabled' : ''}>${receiptBusy ? '…' : `${iconHtml('send')} ${current.hasReceipt ? t('resendReceiptBtn') : t('sendReceiptBtn')}`}</button>
           </div>
         `
         : `<div class="status-line"><span class="status-dot"></span> ${t('autoCheckingStatus')}</div>`
       }
-      ${avgMinutes ? `<div class="demo-note">${t('avgProcessingTimeLabel').replace('{minutes}', String(avgMinutes))}</div>` : ''}
+      ${avgMinutes ? `<div class="eta-line">${iconHtml('clock', '', 14)} ${t('avgProcessingTimeLabel').replace('{minutes}', String(avgMinutes))}</div>` : ''}
 
       <div class="sheet-actions">
         <button class="btn btn-soft btn-block" id="close-sheet">${t('waitInBackgroundBtn')}</button>
@@ -358,9 +378,13 @@ function openWaitingScreen(payment: PaymentDto, purpose: Purpose) {
 
       overlay.querySelector('#check-again')?.addEventListener('click', () => void refresh())
 
+      overlay.querySelector('#receipt-file')?.addEventListener('change', (event) => {
+        receiptFile = (event.target as HTMLInputElement).files?.[0] ?? null
+        mount()
+      })
+
       overlay.querySelector('#send-receipt')?.addEventListener('click', async () => {
-        const input = overlay.querySelector<HTMLInputElement>('#receipt-file')!
-        const file = input.files?.[0]
+        const file = receiptFile
         if (!file) {
           showToast(t('selectImageFirst'))
           return
@@ -369,6 +393,7 @@ function openWaitingScreen(payment: PaymentDto, purpose: Purpose) {
         mount()
         try {
           current = await uploadReceipt(current.id, file)
+          receiptFile = null
           showToast(t('receiptSentToast'))
         } catch (err) {
           showToast(err instanceof ApiError ? err.message : t('sendFailedError'))

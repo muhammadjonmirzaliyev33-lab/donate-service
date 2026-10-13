@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+/** "123456789" yoki "-1001234567890" — Telegram raqamli id'si. */
+const NUMERIC_ID = /^-?\d+$/;
+/** "@UZDI_ORG" — Telegram ommaviy username'i (5-32 belgi: harf, raqam, pastki chiziq). */
+const USERNAME = /^@[A-Za-z0-9_]{4,31}$/;
+
 const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(8080),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL kerak'),
@@ -8,17 +13,46 @@ const envSchema = z.object({
   // faqat asosiy DATABASE_URL ishlaydi.
   BACKUP_DATABASE_URL: z.string().optional(),
   TELEGRAM_BOT_TOKEN: z.string().min(1, 'TELEGRAM_BOT_TOKEN kerak'),
+  // Adminlar ro'yxati — vergul bilan ajratilgan raqamli Telegram ID yoki "@username"
+  // (masalan "123456789,@UZDI_ORG"). Raqamli qismi shu yerga, @username'lar esa
+  // quyidagi ADMIN_TELEGRAM_USERNAMES'ga ajratiladi; tekshiruv ikkalasi bo'yicha ketadi
+  // (isAdminIdentity), chunki Telegram username'ni raqamli id'ga aylantirib bermaydi.
   ADMIN_TELEGRAM_IDS: z
     .string()
     .min(1)
+    // Bitta ham yaroqli yozuv bo'lmasa (masalan matn xato terilgan) — hech kim admin
+    // bo'lmay qolardi. Jim qolmasdan, ishga tushishdayoq xato beramiz.
+    .refine((v) => v.split(',').some((e) => NUMERIC_ID.test(e.trim()) || USERNAME.test(e.trim())), {
+      message: 'kamida bitta raqamli Telegram id yoki "@username" bo\'lishi kerak',
+    })
     .transform((v) =>
       v
         .split(',')
         .map((id) => id.trim())
-        .filter(Boolean)
+        .filter((id) => NUMERIC_ID.test(id))
         .map((id) => BigInt(id)),
     ),
-  ADMIN_ALERT_CHAT_ID: z.string().min(1).transform(BigInt),
+  // ADMIN_TELEGRAM_IDS'ning @username qismi — validateEnv shu maydonga xom qiymatni uzatadi.
+  ADMIN_TELEGRAM_USERNAMES: z
+    .string()
+    .default('')
+    .transform((v) =>
+      v
+        .split(',')
+        .map((name) => name.trim())
+        .filter((name) => name.startsWith('@'))
+        .map((name) => name.slice(1).toLowerCase()),
+    ),
+  // Cheklar/buyurtma signallari tushadigan chat: raqamli chat id yoki ommaviy
+  // kanal/guruh uchun "@username" (masalan "@UZDI_ORG").
+  ADMIN_ALERT_CHAT_ID: z
+    .string()
+    .min(1)
+    .transform((v) => v.trim())
+    .refine((v) => NUMERIC_ID.test(v) || USERNAME.test(v), {
+      message: 'raqamli chat id yoki "@username" bo\'lishi kerak',
+    })
+    .transform((v): bigint | string => (NUMERIC_ID.test(v) ? BigInt(v) : v)),
   FRONTEND_ORIGIN: z.string().min(1),
   // 'polling' — hech qanday ochiq HTTPS domen kerak emas, lokal/dev uchun standart.
   // 'webhook' — production uchun; PUBLIC_URL berilsa, ilova o'zi setWebhook chaqiradi.
@@ -60,7 +94,8 @@ export type Env = {
   BACKUP_DATABASE_URL?: string;
   TELEGRAM_BOT_TOKEN: string;
   ADMIN_TELEGRAM_IDS: bigint[];
-  ADMIN_ALERT_CHAT_ID: bigint;
+  ADMIN_TELEGRAM_USERNAMES: string[];
+  ADMIN_ALERT_CHAT_ID: bigint | string;
   FRONTEND_ORIGIN: string;
   TELEGRAM_BOT_MODE: 'polling' | 'webhook';
   PUBLIC_URL?: string;
@@ -82,6 +117,8 @@ export function validateEnv(config: Record<string, unknown>): Env {
   const autoUrl = (config.PUBLIC_URL as string | undefined) || (config.RENDER_EXTERNAL_URL as string | undefined);
   const withDefaults = {
     ...config,
+    // Adminlar bitta o'zgaruvchida yoziladi — @username qismini shu yerda ajratib beramiz.
+    ADMIN_TELEGRAM_USERNAMES: (config.ADMIN_TELEGRAM_IDS as string | undefined) ?? '',
     PUBLIC_URL: autoUrl,
     FRONTEND_ORIGIN: (config.FRONTEND_ORIGIN as string | undefined) || autoUrl,
   };

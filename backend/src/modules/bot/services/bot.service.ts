@@ -2,6 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../../../config/env';
 
+/**
+ * Telegram `chat_id`: raqamli id (user/guruh) yoki ommaviy kanal/guruh uchun "@username".
+ * Admin signal chati .env'da ikkala ko'rinishda ham berilishi mumkin.
+ */
+export type ChatId = bigint | number | string;
+
 export interface InlineButton {
   text: string;
   callback_data?: string;
@@ -57,7 +63,7 @@ export class BotService {
     }
   }
 
-  sendMessage(chatId: bigint | number, text: string, replyMarkup?: ReplyMarkup) {
+  sendMessage(chatId: ChatId, text: string, replyMarkup?: ReplyMarkup) {
     return this.call<{ message_id: number }>('sendMessage', {
       chat_id: chatId.toString(),
       text,
@@ -66,7 +72,7 @@ export class BotService {
     });
   }
 
-  editMessageText(chatId: bigint | number, messageId: number, text: string, replyMarkup?: ReplyMarkup) {
+  editMessageText(chatId: ChatId, messageId: number, text: string, replyMarkup?: ReplyMarkup) {
     return this.call('editMessageText', {
       chat_id: chatId.toString(),
       message_id: messageId,
@@ -81,7 +87,7 @@ export class BotService {
   }
 
   /** Rasmli xabarning caption'ini tahrirlaydi — editMessageText photo xabarlarida ishlamaydi. */
-  editMessageCaption(chatId: bigint | number, messageId: number, caption: string, replyMarkup?: ReplyMarkup) {
+  editMessageCaption(chatId: ChatId, messageId: number, caption: string, replyMarkup?: ReplyMarkup) {
     return this.call('editMessageCaption', {
       chat_id: chatId.toString(),
       message_id: messageId,
@@ -91,12 +97,12 @@ export class BotService {
     });
   }
 
-  deleteMessage(chatId: bigint | number, messageId: number) {
+  deleteMessage(chatId: ChatId, messageId: number) {
     return this.call('deleteMessage', { chat_id: chatId.toString(), message_id: messageId });
   }
 
   /** Chek/screenshot kabi rasmlarni yuborish uchun — multipart/form-data orqali. */
-  async sendPhoto(chatId: bigint | number, buffer: Buffer, filename: string, caption?: string, replyMarkup?: ReplyMarkup) {
+  async sendPhoto(chatId: ChatId, buffer: Buffer, filename: string, caption?: string, replyMarkup?: ReplyMarkup) {
     try {
       const form = new FormData();
       form.append('chat_id', chatId.toString());
@@ -118,7 +124,7 @@ export class BotService {
   }
 
   /** Rasmni URL orqali yuboradi (masalan Cloudinary'da allaqachon joylashgan rasm) — buferni qayta yuklab olish shart emas. */
-  sendPhotoByUrl(chatId: bigint | number, url: string, caption?: string, replyMarkup?: ReplyMarkup) {
+  sendPhotoByUrl(chatId: ChatId, url: string, caption?: string, replyMarkup?: ReplyMarkup) {
     return this.call<{ message_id: number }>('sendPhoto', {
       chat_id: chatId.toString(),
       photo: url,
@@ -129,7 +135,7 @@ export class BotService {
   }
 
   /** 2-5 ta rasmni bitta albom sifatida yuboradi — caption faqat birinchi rasmga qo'yiladi (Telegram shu tarzda ko'rsatadi). */
-  sendMediaGroup(chatId: bigint | number, urls: string[], caption?: string) {
+  sendMediaGroup(chatId: ChatId, urls: string[], caption?: string) {
     return this.call<{ message_id: number }[]>('sendMediaGroup', {
       chat_id: chatId.toString(),
       media: urls.map((url, i) => ({

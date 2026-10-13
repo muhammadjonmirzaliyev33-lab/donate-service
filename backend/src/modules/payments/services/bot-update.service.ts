@@ -5,6 +5,7 @@ import { PaymentsService } from './payments.service';
 import { BotService } from '../../bot/services/bot.service';
 import { BotOnboardingService } from '../../bot/services/bot-onboarding.service';
 import type { BotLang } from '../../bot/messages/bot-messages';
+import { isAdminIdentity } from '../../../common/utils/admin-identity';
 
 export interface TelegramFrom {
   id: number;
@@ -91,8 +92,9 @@ export class BotUpdateService {
   private async handlePaymentDecision(callbackQueryId: string, from: TelegramFrom, action: 'approve' | 'reject', paymentId: string) {
     const fromId = BigInt(from.id);
     const adminIds = this.config.get('ADMIN_TELEGRAM_IDS', { infer: true });
+    const adminUsernames = this.config.get('ADMIN_TELEGRAM_USERNAMES', { infer: true });
 
-    if (!adminIds.includes(fromId)) {
+    if (!isAdminIdentity(from, adminIds, adminUsernames)) {
       await this.botService.answerCallbackQuery(callbackQueryId, 'Sizda admin huquqi yo‘q');
       return;
     }
@@ -109,8 +111,9 @@ export class BotUpdateService {
   private async handlePaymentUndo(callbackQueryId: string, from: TelegramFrom, paymentId: string) {
     const fromId = BigInt(from.id);
     const adminIds = this.config.get('ADMIN_TELEGRAM_IDS', { infer: true });
+    const adminUsernames = this.config.get('ADMIN_TELEGRAM_USERNAMES', { infer: true });
 
-    if (!adminIds.includes(fromId)) {
+    if (!isAdminIdentity(from, adminIds, adminUsernames)) {
       await this.botService.answerCallbackQuery(callbackQueryId, 'Sizda admin huquqi yo‘q');
       return;
     }

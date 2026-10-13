@@ -6,6 +6,7 @@ import { TelegramAuthService } from '../services/telegram-auth.service';
 import { AdminSessionService } from '../../admin-auth/services/admin-session.service';
 import { parseCookies } from '../../../common/utils/cookies';
 import { AppException, ErrorCode } from '../../../common/errors';
+import { isAdminIdentity } from '../../../common/utils/admin-identity';
 
 /**
  * Ikkita kirish usulini qabul qiladi:
@@ -41,7 +42,8 @@ export class AdminGuard implements CanActivate {
     const user = this.telegramAuth.verifyInitData(req.header('x-telegram-init-data') ?? '');
 
     const adminIds = this.config.get('ADMIN_TELEGRAM_IDS', { infer: true });
-    if (!adminIds.includes(user.id)) {
+    const adminUsernames = this.config.get('ADMIN_TELEGRAM_USERNAMES', { infer: true });
+    if (!isAdminIdentity(user, adminIds, adminUsernames)) {
       throw new AppException(ErrorCode.AUTH_NOT_ADMIN);
     }
 
