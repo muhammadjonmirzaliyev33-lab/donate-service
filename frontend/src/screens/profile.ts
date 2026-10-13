@@ -4,7 +4,7 @@ import { openRatingSheet } from '../components/rating'
 import { showToast } from '../components/sheet'
 import { iconHtml } from '../icons'
 import { ApiError, getMe, getSettings, redeemPromoCode } from '../api'
-import { openTelegramLink } from '../telegram'
+import { openTelegramLink, tg } from '../telegram'
 
 const FAQ_COUNT = 8
 
@@ -27,14 +27,21 @@ export function renderProfile(root: HTMLElement) {
     }).join('')
   }
 
+  // Telegram profil rasmi (bor bo'lsa) — avatar o'rnida ko'rsatiladi.
+  const photoUrl = tg?.initDataUnsafe?.user?.photo_url ?? ''
+
   function html(): string {
     const state = getState()
     const dark = state.theme === 'dark'
     return `
       <div class="profile-card">
-        <div class="avatar big">${state.username.slice(0, 1).toUpperCase()}</div>
+        ${
+          photoUrl
+            ? `<div class="avatar big avatar-photo"><img src="${photoUrl}" alt="" referrerpolicy="no-referrer" /></div>`
+            : `<div class="avatar big">${Array.from(state.username)[0]?.toUpperCase() ?? '?'}</div>`
+        }
         <h3>${state.username}</h3>
-        <span class="id-chip">${state.handle ? `${state.handle} ` : ''}ID: ${state.userId}</span>
+        <button class="id-chip copyable" id="copy-id">${state.handle ? `${state.handle} ` : ''}ID: ${state.userId} ${iconHtml('copy', '', 12)}</button>
         <div class="balance-card inner">
           <div class="balance-info">
             <div class="balance-label">${t('balanceLabel')}</div>
@@ -133,6 +140,25 @@ export function renderProfile(root: HTMLElement) {
       })
     })
     bindFaq()
+    root.querySelector('#copy-id')?.addEventListener('click', async () => {
+      const id = String(getState().userId)
+      try {
+        await navigator.clipboard.writeText(id)
+      } catch {
+        const ta = document.createElement('textarea')
+        ta.value = id
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        ta.remove()
+      }
+      tg?.HapticFeedback?.notificationOccurred('success')
+      showToast(t('idCopied'))
+    })
+    root.querySelector('.avatar-photo img')?.addEventListener('error', () => {
+      const av = root.querySelector('.avatar-photo')
+      if (av) av.outerHTML = `<div class="avatar big">${Array.from(getState().username)[0]?.toUpperCase() ?? '?'}</div>`
+    })
     root.querySelector('#row-topup')!.addEventListener('click', () => (location.hash = '#/topup'))
     root.querySelector('#row-invite')!.addEventListener('click', () => openReferralSheet())
     root.querySelector('#row-rating')!.addEventListener('click', () => openRatingSheet())

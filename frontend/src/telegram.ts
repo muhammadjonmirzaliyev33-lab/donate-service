@@ -25,7 +25,7 @@ declare global {
         };
         initData?: string;
         initDataUnsafe?: {
-          user?: { id: number; username?: string; first_name?: string };
+          user?: { id: number; username?: string; first_name?: string; photo_url?: string };
         };
         colorScheme?: 'light' | 'dark';
         openTelegramLink?: (url: string) => void;

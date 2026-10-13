@@ -213,6 +213,14 @@ export function formatCardDisplay(raw: string): string {
   return digits.match(/.{1,4}/g)?.join(' ') ?? digits
 }
 
+/** Admin paneldan karta qo'shilmagan (yoki API javob bermagan) bo'lsa ko'rsatiladigan asosiy karta. */
+const DEFAULT_CARD: PaymentCardDto = {
+  id: 'default',
+  bankName: 'HUMO',
+  cardNumber: '9860606751486139',
+  holderName: 'SADRIDDIN SHAYDULOV'
+}
+
 /** Shuncha vaqt kutib ham holat o'zgarmasa — "Pul topilmadi" holati va chek yuklash imkoni ko'rsatiladi. */
 const SHOW_RECEIPT_OPTION_AFTER_MS = 60_000
 
@@ -230,7 +238,7 @@ function openWaitingScreen(payment: PaymentDto, purpose: Purpose) {
     if (current.status === 'cancelled') return doneHtml('cancelled')
     if (current.status === 'expired') return doneHtml('expired')
 
-    const card = cards[0]
+    const card = cards[0] ?? DEFAULT_CARD
     const transferAmount = current.matchAmount ?? current.amount
     return `
       <div class="sheet-grabber"></div>
@@ -335,7 +343,7 @@ function openWaitingScreen(payment: PaymentDto, purpose: Purpose) {
     const active = current.status !== 'completed' && current.status !== 'cancelled' && current.status !== 'expired'
 
     if (active) {
-      const cardNumber = cards[0]?.cardNumber
+      const cardNumber = (cards[0] ?? DEFAULT_CARD).cardNumber
       overlay.querySelector('#copy-card')?.addEventListener('click', async () => {
         if (!cardNumber) return
         try {
