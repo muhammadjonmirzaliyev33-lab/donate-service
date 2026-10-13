@@ -20,9 +20,23 @@ function mountGame(root: HTMLElement, g: GameWithPackagesDto) {
   // soni). Qaysi turi kerakligini server `playerIdKind`da aytib yuboradi.
   const usesUsername = g.playerIdKind === 'username'
   const noAccount = g.playerIdKind === 'none'
-  const groups = Array.from(new Set(g.packages.map((p) => p.groupName)))
-  const filters = groups.length > 1 ? ['Barchasi', ...groups.filter((x) => x !== 'Barchasi')] : []
+  const groups = Array.from(new Set(g.packages.map((p) => p.groupName))).filter((x) => x !== 'Barchasi')
+  // Kategoriyalar tartibi: Olmoslar -> Voucher -> Level Up -> Bundle -> qolganlari -> Barchasi (oxirida).
+  const groupRank = (name: string): number => {
+    const n = name.toLowerCase()
+    if (n.startsWith('olmos') || n.startsWith('almaz') || n.includes('diamond')) return 0
+    if (n.includes('voucher') || n.includes('vaucher')) return 1
+    if (n.includes('level')) return 2
+    if (n.includes('bundle')) return 3
+    return 4
+  }
+  const ordered = groups
+    .map((name, i) => ({ name, i }))
+    .sort((a, b) => groupRank(a.name) - groupRank(b.name) || a.i - b.i)
+    .map((x) => x.name)
+  const filters = ordered.length > 1 ? [...ordered, 'Barchasi'] : []
 
+  // Sahifa ochilganda birinchi kategoriya (odatda Olmoslar) tanlangan bo'ladi.
   let filter = filters[0] ?? 'Barchasi'
   let playerId = ''
   let server = ''
@@ -36,8 +50,8 @@ function mountGame(root: HTMLElement, g: GameWithPackagesDto) {
   const packages = () => (filter === 'Barchasi' ? g.packages : g.packages.filter((p) => p.groupName === filter))
 
   function bottomLabel(): { label: string; disabled: boolean } {
-    if (!noAccount && !playerId.trim()) return { label: t('enterIdShort'), disabled: true }
     if (!selectedPkg) return { label: t('selectPackage'), disabled: true }
+    if (!noAccount && !playerId.trim()) return { label: t('enterIdShort'), disabled: true }
     return { label: `${t('payWith')} ${formatSom(selectedPkg.price)}`, disabled: false }
   }
 
@@ -50,37 +64,6 @@ function mountGame(root: HTMLElement, g: GameWithPackagesDto) {
         <button class="round-btn" id="back" aria-label="${t('backPlain')}">${iconHtml('arrowLeft', '', 18)}</button>
         <h1 class="game-hero-name">${g.name}</h1>
       </div>
-
-      ${
-        noAccount
-          ? ''
-          : `
-      <div class="field-group">
-        <div class="field-label">
-          <span>${usesUsername ? t('telegramUsernameLabel') : t('accountLabel')}</span>
-          <button class="save-toggle ${saveId ? '' : 'off'}" id="save-toggle">${iconHtml('save')} ${saveId ? t('idSave') : t('idNoSave')}</button>
-        </div>
-        <div class="id-row">
-          ${
-            usesUsername
-              ? `<input class="input" id="player-id" placeholder="username" value="${playerId}" autocapitalize="off" autocorrect="off" />`
-              : `<input class="input" id="player-id" placeholder="123456789" value="${playerId}" inputmode="numeric" pattern="[0-9]*" />`
-          }
-          ${
-            g.requiresServer
-              ? g.serverOptions
-                ? `<select class="input" id="server-id">${g.serverOptions.map((o) => `<option value="${o.value}" ${o.value === server ? 'selected' : ''}>${o.label}</option>`).join('')}</select>`
-                : `<input class="input" id="server-id" placeholder="${t('serverLabel')}" value="${server}" inputmode="numeric" pattern="[0-9]*" />`
-              : ''
-          }
-        </div>
-      </div>
-
-      <button class="check-btn" id="check-account" ${checkState === 'checking' ? 'disabled' : ''}>${iconHtml('search')} ${t('checkAccountPlain')}</button>
-
-      ${checkHintHtml()}
-      `
-      }
 
       ${
         filters.length > 1
@@ -106,6 +89,37 @@ function mountGame(root: HTMLElement, g: GameWithPackagesDto) {
         )
         .join('')}
       </div>
+
+      ${
+        noAccount || !selectedPkg
+          ? ''
+          : `
+      <div class="field-group" id="account-section" style="margin-top:20px">
+        <div class="field-label">
+          <span>${usesUsername ? t('telegramUsernameLabel') : t('accountLabel')}</span>
+          <button class="save-toggle ${saveId ? '' : 'off'}" id="save-toggle">${iconHtml('save')} ${saveId ? t('idSave') : t('idNoSave')}</button>
+        </div>
+        <div class="id-row">
+          ${
+            usesUsername
+              ? `<input class="input" id="player-id" placeholder="username" value="${playerId}" autocapitalize="off" autocorrect="off" />`
+              : `<input class="input" id="player-id" placeholder="123456789" value="${playerId}" inputmode="numeric" pattern="[0-9]*" />`
+          }
+          ${
+            g.requiresServer
+              ? g.serverOptions
+                ? `<select class="input" id="server-id">${g.serverOptions.map((o) => `<option value="${o.value}" ${o.value === server ? 'selected' : ''}>${o.label}</option>`).join('')}</select>`
+                : `<input class="input" id="server-id" placeholder="${t('serverLabel')}" value="${server}" inputmode="numeric" pattern="[0-9]*" />`
+              : ''
+          }
+        </div>
+      </div>
+
+      <button class="check-btn" id="check-account" ${checkState === 'checking' ? 'disabled' : ''}>${iconHtml('search')} ${t('checkAccountPlain')}</button>
+
+      ${checkHintHtml()}
+      `
+      }
 
       <div class="sticky-bar">
         <button class="btn btn-accent btn-block" id="pay-btn" ${bl.disabled ? 'disabled' : ''}>${bl.label}</button>
@@ -219,8 +233,13 @@ function mountGame(root: HTMLElement, g: GameWithPackagesDto) {
     root.querySelectorAll<HTMLElement>('[data-pkg]').forEach((card) => {
       card.addEventListener('click', () => {
         const pkg = g.packages.find((p) => p.id === card.dataset.pkg) ?? null
+        const firstPick = !selectedPkg
         selectedPkg = pkg
         mount()
+        // Paket tanlangach Player ID qismi pastda ochiladi — o'sha yerga silliq tushiramiz.
+        if (firstPick) {
+          root.querySelector('#account-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
       })
     })
 
