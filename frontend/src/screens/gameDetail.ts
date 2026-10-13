@@ -36,8 +36,8 @@ function mountGame(root: HTMLElement, g: GameWithPackagesDto) {
   const packages = () => (filter === 'Barchasi' ? g.packages : g.packages.filter((p) => p.groupName === filter))
 
   function bottomLabel(): { label: string; disabled: boolean } {
-    if (!noAccount && !playerId.trim()) return { label: t('enterIdShort'), disabled: true }
     if (!selectedPkg) return { label: t('selectPackage'), disabled: true }
+    if (!noAccount && !playerId.trim()) return { label: t('enterIdShort'), disabled: true }
     return { label: `${t('payWith')} ${formatSom(selectedPkg.price)}`, disabled: false }
   }
 
@@ -51,36 +51,6 @@ function mountGame(root: HTMLElement, g: GameWithPackagesDto) {
         <h1 class="game-hero-name">${g.name}</h1>
       </div>
 
-      ${
-        noAccount
-          ? ''
-          : `
-      <div class="field-group">
-        <div class="field-label">
-          <span>${usesUsername ? t('telegramUsernameLabel') : t('accountLabel')}</span>
-          <button class="save-toggle ${saveId ? '' : 'off'}" id="save-toggle">${iconHtml('save')} ${saveId ? t('idSave') : t('idNoSave')}</button>
-        </div>
-        <div class="id-row">
-          ${
-            usesUsername
-              ? `<input class="input" id="player-id" placeholder="username" value="${playerId}" autocapitalize="off" autocorrect="off" />`
-              : `<input class="input" id="player-id" placeholder="123456789" value="${playerId}" inputmode="numeric" pattern="[0-9]*" />`
-          }
-          ${
-            g.requiresServer
-              ? g.serverOptions
-                ? `<select class="input" id="server-id">${g.serverOptions.map((o) => `<option value="${o.value}" ${o.value === server ? 'selected' : ''}>${o.label}</option>`).join('')}</select>`
-                : `<input class="input" id="server-id" placeholder="${t('serverLabel')}" value="${server}" inputmode="numeric" pattern="[0-9]*" />`
-              : ''
-          }
-        </div>
-      </div>
-
-      <button class="check-btn" id="check-account" ${checkState === 'checking' ? 'disabled' : ''}>${iconHtml('search')} ${t('checkAccountPlain')}</button>
-
-      ${checkHintHtml()}
-      `
-      }
 
       ${
         filters.length > 1
@@ -106,6 +76,37 @@ function mountGame(root: HTMLElement, g: GameWithPackagesDto) {
         )
         .join('')}
       </div>
+
+      ${
+        noAccount || !selectedPkg
+          ? ''
+          : `
+      <div class="field-group" style="padding-top:6px">
+        <div class="field-label">
+          <span>${usesUsername ? t('telegramUsernameLabel') : t('accountLabel')}</span>
+          <button class="save-toggle ${saveId ? '' : 'off'}" id="save-toggle">${iconHtml('save')} ${saveId ? t('idSave') : t('idNoSave')}</button>
+        </div>
+        <div class="id-row">
+          ${
+            usesUsername
+              ? `<input class="input" id="player-id" placeholder="username" value="${playerId}" autocapitalize="off" autocorrect="off" />`
+              : `<input class="input" id="player-id" placeholder="123456789" value="${playerId}" inputmode="numeric" pattern="[0-9]*" />`
+          }
+          ${
+            g.requiresServer
+              ? g.serverOptions
+                ? `<select class="input" id="server-id">${g.serverOptions.map((o) => `<option value="${o.value}" ${o.value === server ? 'selected' : ''}>${o.label}</option>`).join('')}</select>`
+                : `<input class="input" id="server-id" placeholder="${t('serverLabel')}" value="${server}" inputmode="numeric" pattern="[0-9]*" />`
+              : ''
+          }
+        </div>
+      </div>
+
+      <button class="check-btn" id="check-account" ${checkState === 'checking' ? 'disabled' : ''}>${iconHtml('search')} ${t('checkAccountPlain')}</button>
+
+      ${checkHintHtml()}
+      `
+      }
 
       <div class="sticky-bar">
         <button class="btn btn-accent btn-block" id="pay-btn" ${bl.disabled ? 'disabled' : ''}>${bl.label}</button>
@@ -221,6 +222,8 @@ function mountGame(root: HTMLElement, g: GameWithPackagesDto) {
         const pkg = g.packages.find((p) => p.id === card.dataset.pkg) ?? null
         selectedPkg = pkg
         mount()
+        // ID maydoni paketlar ro'yxatidan pastda — tanlangandan keyin o'zi ko'rinib tursin.
+        root.querySelector('#player-id')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
     })
 
