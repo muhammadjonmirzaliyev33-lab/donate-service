@@ -190,12 +190,14 @@ export function renderProfile(root: HTMLElement) {
     root.querySelector('#row-social')!.addEventListener('click', openSupport)
 
     // Haqiqiy balans/ism backenddan — kelguncha lokal (eski) qiymat ko'rinib turadi.
-    getMe()
-      .then((me) => {
+    Promise.all([getMe(), getSettings().catch(() => null)])
+      .then(([me, cfg]) => {
         setBalance(me.balance, me.cashback)
-        const displayName = me.firstName || me.username || t('defaultUsername')
-        const handle = me.username ? `@${me.username}` : ''
-        setIdentity({ username: displayName, handle, userId: me.telegramId, phone: me.phone })
+        // Admin paneldan berilgan profil qiymatlari bo'lsa, ular Telegram ma'lumotlaridan ustun turadi.
+        const displayName = cfg?.profileName || me.firstName || me.username || t('defaultUsername')
+        const handle = cfg?.profileHandle || (me.username ? `@${me.username}` : '')
+        const userId = cfg?.profileId || me.telegramId
+        setIdentity({ username: displayName, handle, userId, phone: me.phone })
 
         const card = root.querySelector('.profile-card')
         if (!card) return

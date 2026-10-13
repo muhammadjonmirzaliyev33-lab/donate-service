@@ -180,6 +180,9 @@ create table if not exists app_settings (
   channel_url text,
   referral_fixed_bonus bigint not null default 3000,   -- har bir referral uchun fiks bonus (so'm)
   referral_percent numeric(5, 2) not null default 5,   -- + taklif qilingan userning birinchi to'lovi summasidan foiz
+  profile_name text,     -- profilda ko'rinadigan nom (bo'sh bo'lsa Telegram ismi)
+  profile_handle text,   -- profilda ko'rinadigan @username (bo'sh bo'lsa Telegram username)
+  profile_id text,       -- profilda ko'rinadigan ID (bo'sh bo'lsa Telegram ID)
   updated_at timestamptz not null default now(),
   constraint app_settings_singleton check (id)
 );
@@ -305,6 +308,9 @@ alter table users add column if not exists referral_reward_amount bigint;
 alter table users add column if not exists referral_reward_payment_id uuid;
 alter table app_settings add column if not exists referral_fixed_bonus bigint not null default 3000;
 alter table app_settings add column if not exists referral_percent numeric(5, 2) not null default 5;
+alter table app_settings add column if not exists profile_name text;
+alter table app_settings add column if not exists profile_handle text;
+alter table app_settings add column if not exists profile_id text;
 
 -- ---------- PayCore supplier integratsiyasi (avtomatik yetkazib berish) ----------
 -- Kategoriya (masalan "free-fire") o'yinning o'zi uchun bitta — shuning uchun games'da;

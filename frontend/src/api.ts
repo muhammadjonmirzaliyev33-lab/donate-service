@@ -180,6 +180,9 @@ export interface SettingsDto {
   channelUrl: string | null
   referralFixedBonus: number
   referralPercent: number
+  profileName: string | null
+  profileHandle: string | null
+  profileId: string | null
 }
 
 export function getSettings() {

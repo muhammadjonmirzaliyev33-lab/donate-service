@@ -19,6 +19,9 @@ export class SettingsRepository {
       channelUrl: 'channel_url',
       referralFixedBonus: 'referral_fixed_bonus',
       referralPercent: 'referral_percent',
+      profileName: 'profile_name',
+      profileHandle: 'profile_handle',
+      profileId: 'profile_id',
     };
 
     const entries = Object.entries(input).filter(([, v]) => v !== undefined);

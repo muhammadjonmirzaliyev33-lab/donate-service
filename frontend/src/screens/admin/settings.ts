@@ -20,6 +20,15 @@ async function load(root: HTMLElement) {
         <div class="field-label"><span>Telegram kanal manzili (ixtiyoriy)</span></div>
         <input class="input" id="f-channel" placeholder="https://t.me/kanal" value="${settings.channelUrl ?? ''}" style="margin-bottom:10px" />
       </div>
+      <div class="section-head"><h2>Profil ko'rinishi</h2></div>
+      <div class="field-group">
+        <div class="field-label"><span>Ism (bo'sh bo'lsa Telegram ismi)</span></div>
+        <input class="input" id="f-pname" placeholder="UZDI OFFICIAL" value="${settings.profileName ?? ''}" style="margin-bottom:10px" />
+        <div class="field-label"><span>@username (bo'sh bo'lsa Telegram username)</span></div>
+        <input class="input" id="f-phandle" placeholder="@UZDI_ORG" value="${settings.profileHandle ?? ''}" style="margin-bottom:10px" />
+        <div class="field-label"><span>ID (bo'sh bo'lsa Telegram ID)</span></div>
+        <input class="input" id="f-pid" placeholder="8682815655" value="${settings.profileId ?? ''}" />
+      </div>
       <div class="section-head"><h2>Referral (do'st taklif qilish)</h2></div>
       <div class="field-group">
         <div class="field-label"><span>Fiks bonus (so'm)</span></div>
@@ -34,6 +43,9 @@ async function load(root: HTMLElement) {
     root.querySelector('#save-settings')!.addEventListener('click', async () => {
       const support = (root.querySelector('#f-support') as HTMLInputElement).value.trim()
       const channel = (root.querySelector('#f-channel') as HTMLInputElement).value.trim()
+      const pName = (root.querySelector('#f-pname') as HTMLInputElement).value.trim()
+      const pHandle = (root.querySelector('#f-phandle') as HTMLInputElement).value.trim().replace(/^@/, '')
+      const pId = (root.querySelector('#f-pid') as HTMLInputElement).value.trim()
       const refFixed = Number((root.querySelector('#f-ref-fixed') as HTMLInputElement).value)
       const refPercent = Number((root.querySelector('#f-ref-percent') as HTMLInputElement).value)
       if (refFixed < 0 || refPercent < 0 || refPercent > 100) {
@@ -45,7 +57,10 @@ async function load(root: HTMLElement) {
           supportUsername: support || null,
           channelUrl: channel || null,
           referralFixedBonus: refFixed,
-          referralPercent: refPercent
+          referralPercent: refPercent,
+          profileName: pName || null,
+          profileHandle: pHandle ? `@${pHandle}` : null,
+          profileId: pId || null
         })
         showToast('Sozlamalar saqlandi')
       } catch (err) {

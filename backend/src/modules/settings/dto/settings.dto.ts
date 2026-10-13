@@ -4,6 +4,9 @@ export interface SettingsRow {
   channel_url: string | null;
   referral_fixed_bonus: string;
   referral_percent: string;
+  profile_name: string | null;
+  profile_handle: string | null;
+  profile_id: string | null;
   updated_at: Date;
 }
 
@@ -13,6 +16,9 @@ export interface SettingsDto {
   channelUrl: string | null;
   referralFixedBonus: number;
   referralPercent: number;
+  profileName: string | null;
+  profileHandle: string | null;
+  profileId: string | null;
 }
 
 export function toSettingsDto(row: SettingsRow): SettingsDto {
@@ -22,5 +28,8 @@ export function toSettingsDto(row: SettingsRow): SettingsDto {
     channelUrl: row.channel_url,
     referralFixedBonus: Number(row.referral_fixed_bonus),
     referralPercent: Number(row.referral_percent),
+    profileName: row.profile_name,
+    profileHandle: row.profile_handle,
+    profileId: row.profile_id,
   };
 }
